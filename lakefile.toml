@@ -1,0 +1,21 @@
+name = "pvsnpLeanAC0Profondeur2"
+defaultTargets = ["PvsnpLeanAC0Profondeur2"]
+
+# ----------------------------------------------------------------------
+# Dépendance Mathlib4
+# ----------------------------------------------------------------------
+# La révision `rev` doit être compatible avec `lean-toolchain`. Au moment
+# de la première mise en place, on cible la branche `master` ; après
+# `lake update`, Lake figera un commit précis dans `lake-manifest.json`.
+# Si le build échoue à cause d'un mismatch Lean/Mathlib, ajuster
+# `lean-toolchain` au toolchain utilisé par le commit Mathlib choisi.
+# ----------------------------------------------------------------------
+[[require]]
+name = "mathlib"
+scope = "leanprover-community"
+
+# ----------------------------------------------------------------------
+# Bibliothèque principale
+# ----------------------------------------------------------------------
+[[lean_lib]]
+name = "PvsnpLeanAC0Profondeur2"
