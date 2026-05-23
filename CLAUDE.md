@@ -11,12 +11,14 @@ Ce dépôt est la **branche de formalisation Lean 4** du projet
 [`Tanguy333/pvsnp-exploration`](https://github.com/Tanguy333/pvsnp-exploration).
 
 Le repo parent est une exploration adverse (Proposeur LLM Qwen Max contre
-Réfuteur Claude) du problème **P vs NP**. Sur 19 tours, il a produit **7
+Réfuteur Claude) du problème **P vs NP**. Sur 20 tours, il a produit **8
 théorèmes ✅ ÉTABLIS structurellement** — tous des bornes inférieures
-combinatoires sur AC⁰ profondeur 2. Au Tour 19, le paradigme a été déclaré
-*saturé* (caractérisation d'essentialité unifie les 6 précédents).
+combinatoires sur AC⁰ profondeur 2. Au Tour 19, le paradigme `(α)/(β)` a été
+unifié sous une caractérisation d'essentialité. Au Tour 20, le **pôle extrême
+opposé** (fonctions antipodales, défaut maximal `n(n−2)`) a été établi,
+cartographiant le paysage AC⁰ d=2 *bidirectionnellement*.
 
-**Ce dépôt prend en input ces 7 théorèmes et les certifie mécaniquement en
+**Ce dépôt prend en input ces 8 théorèmes et les certifie mécaniquement en
 Lean 4.** Aucune boucle adverse ici — juste de la formalisation rigoureuse.
 
 > **Cadrage honnête.** Le repo parent n'a pas résolu P vs NP (et le admet
@@ -30,11 +32,11 @@ Lean 4.** Aucune boucle adverse ici — juste de la formalisation rigoureuse.
 
 ---
 
-## 2. Les 7 théorèmes à formaliser
+## 2. Les 8 théorèmes à formaliser
 
 Issus de `Tanguy333/pvsnp-exploration`, section §3 Établis du cahier de bord.
 Toutes les preuves sont combinatoires élémentaires et vérifiées par calcul
-exhaustif à n=4 (ou n=3 pour la classe entière).
+exhaustif à n=4 (ou n=3 pour la classe entière, ou n=5 pour L20).
 
 | Tour | Nom | Énoncé |
 |---:|---|---|
@@ -45,10 +47,23 @@ exhaustif à n=4 (ou n=3 pour la classe entière).
 | 16 | **L16** | `DNF_min(mod_p_n) = Σ_{k ≡ 0 (mod p)} C(n, k)` pour tout `p ≥ 2` |
 | 17+18 | **L18** | `DNF_min(IP_{2n}) = (3^n − 1)/2` (preuve par récurrence + classification) |
 | 19 | **L19** | `DNF_min(f) = |primes(f)|` ⟺ chaque implicant premier admet un témoin essentiel |
+| 20 | **L20** | Pour `f_α(x) = 1 ⟺ x ∉ {α, ¬α}` (fonction antipodale, n ≥ 3) : `|primes| = n(n−1)`, `DNF_min = n`, défaut maximal `n(n−2)` |
 
 **Théorème central : L19** — c'est la *caractérisation d'essentialité* qui
 unifie L12, L13, L14, L15, L16, L18 comme cas particuliers (chaque famille
 est dans la classe (α)/(β), et `|primes|` est calculé explicitement).
+
+**Théorème dual : L20** — caractérise le *pôle extrême opposé* à (α)/(β),
+les fonctions à défaut maximal `n(n−2)`. Ensemble, L19 et L20 délimitent les
+deux extrêmes du paradigme AC⁰ d=2 / DNF-MIN.
+
+**Note importante sur L20 (audit du parent)** : le lien à la Σ₂^P-difficulté
+de DNF-MIN est **plus faible** que ce que le Proposeur avait initialement
+revendiqué. Sur les antipodales spécifiquement, DNF-MIN est en fait *facile*
+(`DNF_min = n` en O(n)) ; le défaut élevé concerne la redondance du glouton,
+pas la difficulté intrinsèque. La Σ₂^P-difficulté d'Umans 1999 vient
+d'autres familles. **À mentionner dans la docstring Lean** si la docstring
+parle du lien P vs NP.
 
 ---
 
@@ -80,6 +95,21 @@ est dans la classe (α)/(β), et `|primes|` est calculé explicitement).
 5. **L14, L15, L16, L18** : applications de L19 à des familles de fonctions
    spécifiques (majorité, seuil, modulo, inner product). Chacune demande de
    prouver que la fonction est dans la classe (α)/(β) + calculer `|primes|`.
+
+6. **L20** dans `pvsnpLeanAC0Profondeur2/Antipodal.lean` :
+   - Théorème *dual* à L19 (hors (α)/(β) — défaut maximal).
+   - Preuve indépendante de L19 (les antipodales ne satisfont *pas*
+     l'hypothèse d'essentialité — `n(n−1) − n` implicants premiers sont
+     redondants).
+   - 4 sous-lemmes : (i) `|f^{-1}(1)| = 2^n − 2`, (ii) `|primes| = n(n−1)`,
+     (iii) `DNF_min = n` (cycle dirigé + vecteurs unitaires), (iv) défaut =
+     `n(n−2)`. Tous prouvés combinatoirement dans le parent (cf.
+     `tours/tour_20_antipodales_etabli.md`).
+   - **L20.5 (corollaire)** : « les antipodales sont les *seules* à atteindre
+     le défaut maximal » reste *conjecturé* pour n ≥ 5 dans le parent. Si la
+     formalisation s'attaque à L20.5, marquer explicitement la portion
+     conjecturale (probablement laisser `sorry` sur la partie unicité, en
+     prouvant uniquement (i)-(iv)).
 
 ### Cible
 

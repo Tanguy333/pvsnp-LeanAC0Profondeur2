@@ -1,21 +1,25 @@
 # pvsnp-LeanAC0Profondeur2
 
-Formalisation Lean 4 de **7 théorèmes de borne inférieure sur AC⁰ profondeur 2**
+Formalisation Lean 4 de **8 théorèmes de borne inférieure sur AC⁰ profondeur 2**
 (circuits DNF/CNF sans contrainte de fan-in), issus du projet d'exploration
 adverse [Tanguy333/pvsnp-exploration](https://github.com/Tanguy333/pvsnp-exploration)
 sur la question P vs NP.
 
 ## Contexte
 
-Le repo parent a produit 7 théorèmes ✅ Établis structurellement après 19 tours
+Le repo parent a produit 8 théorèmes ✅ Établis structurellement après 20 tours
 de boucle adverse Proposeur (LLM) / Réfuteur (Claude). Tous sont des résultats
 classiques de logique booléenne (Quine 1952, McCluskey 1956, FSS 1981) qui
 **n'apparaissent à ma connaissance dans aucune bibliothèque formelle** : trop
 élémentaires pour faire l'objet d'un paper, mais trop techniques pour être
 formalisés en passant.
 
-Ce dépôt vise à combler ce trou, avec pour cible une PR mathlib4 si la qualité
-le permet.
+Le paradigme `AC⁰ d=2 / DNF-MIN` est désormais **cartographié bidirectionnellement** :
+L19 fournit la caractérisation du pôle « facile » (`DNF_min = |primes|`), L20
+fournit le pôle « défaut maximal » (fonctions antipodales).
+
+Ce dépôt vise à combler le trou de formalisation, avec pour cible une PR mathlib4
+si la qualité le permet.
 
 ## Théorèmes ciblés
 
@@ -28,6 +32,7 @@ le permet.
 | L16 | `dnfMin mod_{p,n} = Σ_{k ≡ 0 mod p} C(n, k)` | ☐ à faire |
 | L18 | `dnfMin IP_{2n} = (3^n − 1)/2` | ☐ à faire |
 | L19 | Caractérisation d'essentialité (théorème-cadre) | ☐ à faire |
+| L20 | `dnfMin (antipodalₐ : Fin n → Bool) = n`, `|primes| = n(n−1)`, défaut maximal `n(n−2)` (pôle extrême opposé à L19, n ≥ 3) | ☐ à faire |
 
 À mettre à jour au fur et à mesure des preuves complétées.
 
@@ -53,7 +58,8 @@ pvsnp-LeanAC0Profondeur2/
 │   ├── Majority.lean       ← L14
 │   ├── Threshold.lean      ← L15
 │   ├── ModP.lean           ← L16
-│   └── InnerProduct.lean   ← L18
+│   ├── InnerProduct.lean   ← L18
+│   └── Antipodal.lean      ← L20 (pôle extrême, défaut maximal n(n−2))
 └── tests/                  ← optionnel : tests de cohérence avec calculs Python du parent
 ```
 
