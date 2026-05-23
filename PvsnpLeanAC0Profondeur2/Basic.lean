@@ -133,32 +133,103 @@ def isPrimeImplicant (f : BoolFun n) (m : Monomial n) : Prop :=
   isImplicant f m ∧
     ∀ m', isImplicant f m' → Monomial.covers m m' → m = m'
 
-/-! ## DNF minimum
+/-! ## Mintermes complets et DNF canonique
 
 `dnfMin f` est la taille minimale d'un DNF calculant `f`. Pour que cette
 définition soit utile, on doit prouver qu'il existe au moins un DNF
-calculant `f` (la non-vacuité de l'ensemble considéré par `sInf`). Le
-témoin canonique est le « DNF des mintermes complets » : pour chaque
-`x ∈ f^{-1}(1)`, on prend le monôme qui fixe chaque variable à la valeur
-de `x i`. Sa réalisation Lean est laissée en `sorry` pour une itération
-ultérieure (elle nécessite un peu de combinatoire élémentaire mais
-n'affecte pas les énoncés des théorèmes L12-L20). -/
+calculant `f`. Le témoin canonique est le « DNF des mintermes complets » :
+pour chaque `x ∈ f^{-1}(1)`, on prend le monôme qui fixe chaque variable
+à la valeur de `x i`. -/
 
 /-- Le minterme complet associé à une affectation `x` : pour chaque
 variable `i`, on fixe `m i = some (x i)`. -/
 def mintermOf (x : Fin n → Bool) : Monomial n :=
   fun i => some (x i)
 
+/-- Un minterme complet n'est satisfait que par son affectation associée. -/
+@[simp] lemma mintermOf_satisfies_iff (x y : Fin n → Bool) :
+    (mintermOf x).satisfies y ↔ y = x := by
+  constructor
+  · -- (mintermOf x).satisfies y → y = x
+    intro h
+    funext i
+    -- h : ∀ i b, mintermOf x i = some b → y i = b
+    -- On applique en i := i, b := x i, en notant que mintermOf x i = some (x i).
+    apply h i (x i)
+    simp [mintermOf]
+  · -- y = x → (mintermOf x).satisfies y
+    rintro rfl i b hb
+    -- hb : mintermOf x i = some b, i.e. some (x i) = some b
+    -- Goal : x i = b
+    simp [mintermOf] at hb
+    exact hb
+
 /-- DNF canonique d'une fonction `f` : OR des mintermes des `x` tels que
-`f x = true`. La preuve qu'il calcule bien `f` est laissée en `sorry`. -/
+`f x = true`. Sa taille est exactement le nombre d'affectations à 1. -/
 def canonicalDNF (f : BoolFun n) : DNF n :=
-  sorry  -- à réaliser : énumérer les `x : Fin n → Bool` avec `f x = true`,
-         -- puis prendre la liste des `mintermOf x`.
+  (Finset.univ.filter (fun x : Fin n → Bool => f x = true)).toList.map mintermOf
+
+/-- Caractérisation de l'appartenance dans le DNF canonique. -/
+lemma mem_canonicalDNF_iff {f : BoolFun n} {m : Monomial n} :
+    m ∈ canonicalDNF f ↔ ∃ x, f x = true ∧ m = mintermOf x := by
+  unfold canonicalDNF
+  simp only [List.mem_map, Finset.mem_toList, Finset.mem_filter,
+             Finset.mem_univ, true_and]
+  constructor
+  · rintro ⟨x, hfx, hm⟩
+    exact ⟨x, hfx, hm.symm⟩
+  · rintro ⟨x, hfx, hm⟩
+    exact ⟨x, hfx, hm.symm⟩
+
+/-- Caractérisation propositionnelle de l'évaluation du DNF canonique :
+elle est vraie en `x` si et seulement si `f x = true`. -/
+lemma canonicalDNF_eval_eq_true_iff (f : BoolFun n) (x : Fin n → Bool) :
+    (canonicalDNF f).eval x = true ↔ f x = true := by
+  unfold DNF.eval
+  rw [List.any_eq_true]
+  refine ⟨?_, ?_⟩
+  · -- (∃ m ∈ canonicalDNF f, decide (m.satisfies x) = true) → f x = true
+    rintro ⟨m, hm, hsat⟩
+    obtain ⟨y, hfy, rfl⟩ := mem_canonicalDNF_iff.mp hm
+    -- hsat : decide ((mintermOf y).satisfies x) = true
+    rw [decide_eq_true_iff, mintermOf_satisfies_iff] at hsat
+    -- hsat : x = y
+    subst hsat
+    exact hfy
+  · -- f x = true → ∃ m ∈ canonicalDNF f, decide (m.satisfies x) = true
+    intro hfx
+    refine ⟨mintermOf x, mem_canonicalDNF_iff.mpr ⟨x, hfx, rfl⟩, ?_⟩
+    -- Goal : decide ((mintermOf x).satisfies x) = true
+    simp
 
 /-- Le DNF canonique calcule `f`. -/
 theorem canonicalDNF_computes (f : BoolFun n) :
     (canonicalDNF f).computes f := by
-  sorry
+  intro x
+  show (canonicalDNF f).eval x = f x
+  have key := canonicalDNF_eval_eq_true_iff f x
+  -- key : (canonicalDNF f).eval x = true ↔ f x = true
+  -- On distingue les 4 combinaisons Bool × Bool. Trois cas se résolvent
+  -- par `rfl` ou par contradiction via `key`.
+  cases h1 : (canonicalDNF f).eval x with
+  | true =>
+    cases h2 : f x with
+    | true => rfl
+    | false =>
+      -- h1 : eval = true, donc f x = true via key.mp, contredit h2.
+      have : f x = true := key.mp h1
+      rw [h2] at this
+      contradiction
+  | false =>
+    cases h2 : f x with
+    | true =>
+      -- h2 : f x = true, donc eval = true via key.mpr, contredit h1.
+      have : (canonicalDNF f).eval x = true := key.mpr h2
+      rw [h1] at this
+      contradiction
+    | false => rfl
+
+/-! ## DNF minimum -/
 
 /-- Taille minimale d'un DNF calculant `f`.
 
